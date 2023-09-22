@@ -1,0 +1,99 @@
+//! This module contains a useful trait for recursion: [KimchiCurve],
+//! which defines how a pair of curves interact.
+
+use ark_ec::{short_weierstrass_jacobian::GroupAffine, ModelParameters};
+use mina_curves::pasta::curves::{
+    pallas::{LegacyPallasParameters, PallasParameters},
+    vesta::{LegacyVestaParameters, VestaParameters},
+};
+use mina_poseidon::poseidon::ArithmeticSpongeParams;
+use once_cell::sync::Lazy;
+use poly_commitment::{commitment::CommitmentCurve, srs::endos};
+
+/// Represents additional information that a curve needs in order to be used with Kimchi
+pub trait KimchiCurve: CommitmentCurve {
+    /// A human readable name.
+    const NAME: &'static str;
+
+    /// The other curve that forms the cycle used for recursion.
+    type OtherCurve: KimchiCurve<
+        ScalarField = Self::BaseField,
+        BaseField = Self::ScalarField,
+        OtherCurve = Self,
+    >;
+
+    /// Provides the sponge params to be used with this curve.
+    /// If the params for the base field are needed, they can be obtained from [`KimchiCurve::OtherCurve`].
+    fn sponge_params() -> &'static ArithmeticSpongeParams<Self::ScalarField>;
+
+    /// Provides the coefficients for the curve endomorphism called (q,r) in some places.
+    fn endos() -> &'static (Self::BaseField, Self::ScalarField);
+}
+
+impl KimchiCurve for GroupAffine<VestaParameters> {
+    const NAME: &'static str = "vesta";
+
+    type OtherCurve = GroupAffine<PallasParameters>;
+
+    fn sponge_params() -> &'static ArithmeticSpongeParams<Self::ScalarField> {
+        mina_poseidon::pasta::fp_kimchi::static_params()
+    }
+
+    fn endos() -> &'static (Self::BaseField, Self::ScalarField) {
+        static VESTA_ENDOS: Lazy<(
+            <VestaParameters as ModelParameters>::BaseField,
+            <VestaParameters as ModelParameters>::ScalarField,
+        )> = Lazy::new(endos::<GroupAffine<VestaParameters>>);
+        &VESTA_ENDOS
+    }
+}
+
+impl KimchiCurve for GroupAffine<PallasParameters> {
+    const NAME: &'static str = "pallas";
+
+    type OtherCurve = GroupAffine<VestaParameters>;
+
+    fn sponge_params() -> &'static ArithmeticSpongeParams<Self::ScalarField> {
+        mina_poseidon::pasta::fq_kimchi::static_params()
+    }
+
+    fn endos() -> &'static (Self::BaseField, Self::ScalarField) {
+        static PALLAS_ENDOS: Lazy<(
+            <PallasParameters as ModelParameters>::BaseField,
+            <PallasParameters as ModelParameters>::ScalarField,
+        )> = Lazy::new(endos::<GroupAffine<PallasParameters>>);
+        &PALLAS_ENDOS
+    }
+}
+
+//
+// Legacy curves
+//
+
+impl KimchiCurve for GroupAffine<LegacyVestaParameters> {
+    const NAME: &'static str = "legacy_vesta";
+
+    type OtherCurve = GroupAffine<LegacyPallasParameters>;
+
+    fn sponge_params() -> &'static ArithmeticSpongeParams<Self::ScalarField> {
+        mina_poseidon::pasta::fp_legacy::static_params()
+    }
+
+    fn endos() -> &'static (Self::BaseField, Self::ScalarField) {
+        GroupAffine::<VestaParameters>::endos()
+    }
+}
+
+impl KimchiCurve for GroupAffine<LegacyPallasParameters> {
+    const NAME: &'static str = "legacy_pallas";
+
+    type OtherCurve = GroupAffine<LegacyVestaParameters>;
+
+    fn sponge_params() -> &'static ArithmeticSpongeParams<Self::ScalarField> {
+        mina_poseidon::pasta::fq_legacy::static_params()
+    }
+
+    fn endos() -> &'static (Self::BaseField, Self::ScalarField) {
+        GroupAffine::<PallasParameters>::endos()
+    }
+}
