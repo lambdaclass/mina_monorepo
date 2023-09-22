@@ -52,6 +52,8 @@ module Run = struct
       val json =
         Backend.R1CS_constraint_system.to_json cs
         |> Js.string |> Util.json_parse
+      
+      method add x y = x + y
     end
 end
 

@@ -191,6 +191,7 @@ declare const Snarky: {
       rows: number;
       digest: string;
       json: JsonConstraintSystem;
+      add: (x: number, y: number) => number;
     };
   };
 

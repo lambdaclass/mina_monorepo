@@ -90,11 +90,11 @@ function constraintSystem<T>(f: () => T) {
   let id = snarkContext.enter({ inAnalyze: true, inCheckedComputation: true });
   try {
     let result: T;
-    let { rows, digest, json } = Snarky.run.constraintSystem(() => {
+    let { rows, digest, json, add } = Snarky.run.constraintSystem(() => {
       result = f();
     });
     let { gates, publicInputSize } = gatesFromJson(json);
-    return { rows, digest, result: result! as T, gates, publicInputSize };
+    return { rows, digest, result: result! as T, gates, publicInputSize, add };
   } catch (error) {
     throw prettifyStacktrace(error);
   } finally {
