@@ -32,6 +32,26 @@ class Circuit {
   }
 
   /**
+  * Does the same as `prove`, for now.
+  */
+  static generateWitness(privateInput: any[], publicInput: any[], keypair: Keypair) {
+    let main = mainFromCircuitData(this._main, privateInput);
+    let publicInputSize = this._main.publicInputType.sizeInFields();
+    let publicInputFields = this._main.publicInputType.toFields(publicInput);
+    return prettifyStacktracePromise(
+      withThreadPool(async () => {
+        let proof = Snarky.circuit.generateWitness(
+          main,
+          publicInputSize,
+          MlFieldConstArray.to(publicInputFields),
+          keypair.value
+        );
+        return new Proof(proof);
+      })
+    );
+  }
+
+  /**
    * Proves a statement using the private input, public input, and the {@link Keypair} of the circuit.
    * @example
    * ```ts

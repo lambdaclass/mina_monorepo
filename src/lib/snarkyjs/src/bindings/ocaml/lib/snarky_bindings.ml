@@ -157,6 +157,16 @@ module Circuit = struct
     let return_typ = Impl.Typ.unit in
     let cs = Impl.constraint_system ~input_typ ~return_typ (Main.of_js main) in
     Impl.Keypair.generate ~prev_challenges:0 cs
+  
+  let create_witness main public_input_size public_input keypair =
+    let pk = Impl.Keypair.pk keypair in
+    let input_typ = typ public_input_size in
+    let return_typ = Impl.Typ.unit in
+    Impl.generate_witness_conv ~input_typ ~return_typ
+      ~f:(fun { Impl.Proof_inputs.auxiliary_inputs; public_inputs } () ->
+        Backend.Proof.create pk ~auxiliary:auxiliary_inputs
+          ~primary:public_inputs )
+      (Main.of_js main) public_input
 
   let prove main public_input_size public_input keypair =
     let pk = Impl.Keypair.pk keypair in
@@ -309,6 +319,8 @@ let snarky =
     val circuit =
       object%js
         method compile = Circuit.compile
+
+        method createWitness = Circuit.create_witness
 
         method prove = Circuit.prove
 
