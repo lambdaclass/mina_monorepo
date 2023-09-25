@@ -4,6 +4,8 @@ import { withThreadPool } from '../bindings/js/wrapper.js';
 import { Provable } from './provable.js';
 import { snarkContext, gatesFromJson } from './provable-context.js';
 import { prettifyStacktrace, prettifyStacktracePromise } from './errors.js';
+import { MlArray } from './ml/base.js';
+import { FieldVar } from './field.js';
 
 // external API
 export { public_, circuitMain, Circuit, Keypair, Proof, VerificationKey };
@@ -40,13 +42,13 @@ class Circuit {
     let publicInputFields = this._main.publicInputType.toFields(publicInput);
     return prettifyStacktracePromise(
       withThreadPool(async () => {
-        let proof = Snarky.circuit.generateWitness(
+        let witness = Snarky.circuit.generateWitness(
           main,
           publicInputSize,
           MlFieldConstArray.to(publicInputFields),
           keypair.value
         );
-        return new Proof(proof);
+        return witness;
       })
     );
   }

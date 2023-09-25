@@ -118,6 +118,32 @@ module Proof = Plonk_dlog_proof.Make (struct
         ~f:(fun pk auxiliary_input runtime_tables prev_challenges prev_sgs ->
           Promise.run_in_thread (fun () ->
               create pk auxiliary_input runtime_tables prev_challenges prev_sgs ) )
+    
+    let generate_witness_aux ~f:create (pk : Keypair.t) primary auxiliary prev_chals
+        prev_comms =
+      (* external values contains [1, primary..., auxiliary ] *)
+      let external_values i =
+        let open Field.Vector in
+        if i < length primary then get primary i
+        else get auxiliary (i - length primary)
+      in
+
+      (* compute witness *)
+      let computed_witness, runtime_tables =
+        R1CS_constraint_system.compute_witness pk.cs external_values
+      in
+      let num_rows = Array.length computed_witness.(0) in
+
+      (* convert to Rust vector *)
+      Array.init Kimchi_backend_common.Constants.columns ~f:(fun col ->
+          let witness = Field.Vector.create () in
+          for row = 0 to num_rows - 1 do
+            Field.Vector.emplace_back witness computed_witness.(col).(row)
+          done ;
+          witness )
+
+    let generate_witness (pk : Keypair.t) ~primary ~auxiliary ~prev_chals ~prev_comms =
+      generate_witness_aux pk primary auxiliary prev_chals prev_comms ~f:create
 
     let create (pk : Keypair.t) ~primary ~auxiliary ~prev_chals ~prev_comms =
       create_aux pk primary auxiliary prev_chals prev_comms ~f:create
