@@ -107,3 +107,5 @@ Pipfile.lock
 # coverage report files
 *.coverage
 _coverage/
+
+src/lib/snarkyjs/src/bindings/compiled/
