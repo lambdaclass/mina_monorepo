@@ -105,6 +105,12 @@ val snarky :
               (Impl.Keypair.t -> Impl.Verification_key.t) Js.meth >
           Js.t
           Js.readonly_prop
+      ; generateWitness :
+             (Field.t array -> unit)
+          -> int
+          -> Impl.field array
+          -> Impl.Keypair.t
+          -> Impl.field Js.js_array Js.t Js.js_array Js.t Js.meth
       ; prove :
           (   (Field.t array -> unit)
            -> int

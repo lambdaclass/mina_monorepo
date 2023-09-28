@@ -95,6 +95,14 @@ module type Inputs_intf = sig
 
     type t = (Curve.Affine.Backend.t, Scalar_field.t) Kimchi_types.prover_proof
 
+    val generate_witness :
+         Index.t
+      -> primary:Scalar_field.Vector.t
+      -> auxiliary:Scalar_field.Vector.t
+      -> prev_chals:Scalar_field.t array
+      -> prev_comms:Curve.Affine.Backend.t array
+      -> Scalar_field.Vector.t array
+
     val create :
          Index.t
       -> primary:Scalar_field.Vector.t
@@ -502,6 +510,24 @@ module Make (Inputs : Inputs_intf) = struct
 
   let to_backend_with_public_evals chal_polys primary_input t =
     to_backend_with_public_evals' chal_polys (List.to_array primary_input) t
+  
+  let generate_witness ?message pk ~primary ~auxiliary =
+    let chal_polys =
+      match (message : message option) with Some s -> s | None -> []
+    in
+    let challenges =
+      List.map chal_polys ~f:(fun { Challenge_polynomial.challenges; _ } ->
+          challenges )
+      |> Array.concat
+    in
+    let commitments =
+      Array.of_list_map chal_polys
+        ~f:(fun { Challenge_polynomial.commitment; _ } ->
+          G.Affine.to_backend (Finite commitment) )
+    in
+
+    Backend.generate_witness pk ~primary ~auxiliary ~prev_chals:challenges
+      ~prev_comms:commitments
 
   let create ?message pk ~primary ~auxiliary =
     let chal_polys =

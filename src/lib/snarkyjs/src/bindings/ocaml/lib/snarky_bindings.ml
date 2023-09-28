@@ -156,6 +156,16 @@ module Circuit = struct
     let cs = Impl.constraint_system ~input_typ ~return_typ (Main.of_js main) in
     Impl.Keypair.generate ~prev_challenges:0 cs
 
+  let generate_witness main public_input_size public_input keypair =
+    let pk = Impl.Keypair.pk keypair in
+    let input_typ = typ public_input_size in
+    let return_typ = Impl.Typ.unit in
+    Impl.generate_witness_conv ~input_typ ~return_typ
+      ~f:(fun { Impl.Proof_inputs.auxiliary_inputs; public_inputs } () ->
+        Backend.Proof.generate_witness pk ~auxiliary:auxiliary_inputs
+          ~primary:public_inputs )
+      (Main.of_js main) public_input
+
   let prove main public_input_size public_input keypair =
     let pk = Impl.Keypair.pk keypair in
     let input_typ = typ public_input_size in
@@ -307,6 +317,29 @@ let snarky =
     val circuit =
       object%js
         method compile = Circuit.compile
+
+        method generateWitness main public_input_size public_input keypair =
+          let ocaml_witness =
+            Circuit.generate_witness main public_input_size public_input keypair
+          in
+          let num_cols = Array.length ocaml_witness in
+          let witness = new%js Js.array_length num_cols in
+
+          for i = 0 to num_cols - 1 do
+            let ocaml_row = Array.get ocaml_witness i in
+            let num_rows = Kimchi_bindings.FieldVectors.Fp.length ocaml_row in
+            let row = new%js Js.array_length num_rows in
+
+            for j = 0 to num_rows - 1 do
+              let witness_field =
+                Kimchi_bindings.FieldVectors.Fp.get ocaml_row j
+              in
+              Js.array_set row j witness_field
+            done ;
+            Js.array_set witness i row
+          done ;
+
+          witness
 
         method prove = Circuit.prove
 

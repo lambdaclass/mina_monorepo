@@ -4,6 +4,8 @@ import { withThreadPool } from '../bindings/js/wrapper.js';
 import { Provable } from './provable.js';
 import { snarkContext, gatesFromJson } from './provable-context.js';
 import { prettifyStacktrace, prettifyStacktracePromise } from './errors.js';
+import { MlArray } from './ml/base.js';
+import { FieldVar } from './field.js';
 
 // external API
 export { public_, circuitMain, Circuit, Keypair, Proof, VerificationKey };
@@ -27,6 +29,26 @@ class Circuit {
       withThreadPool(async () => {
         let keypair = Snarky.circuit.compile(main, publicInputSize);
         return new Keypair(keypair);
+      })
+    );
+  }
+
+  /**
+  * Does the same as `prove`, for now.
+  */
+  static generateWitness(privateInput: any[], publicInput: any[], keypair: Keypair) {
+    let main = mainFromCircuitData(this._main, privateInput);
+    let publicInputSize = this._main.publicInputType.sizeInFields();
+    let publicInputFields = this._main.publicInputType.toFields(publicInput);
+    return prettifyStacktracePromise(
+      withThreadPool(async () => {
+        let witness = Snarky.circuit.generateWitness(
+          main,
+          publicInputSize,
+          MlFieldConstArray.to(publicInputFields),
+          keypair.value
+        );
+        return witness;
       })
     );
   }

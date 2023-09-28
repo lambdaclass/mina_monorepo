@@ -313,6 +313,14 @@ declare const Snarky: {
     compile(main: Snarky.Main, publicInputSize: number): Snarky.Keypair;
 
     /**
+     * Does the same as `prove`, for now.
+     */
+    generateWitness(main: Snarky.Main,
+      publicInputSize: number,
+      publicInput: MlArray<FieldConst>,
+      keypair: Snarky.Keypair): MlArray<MlArray<FieldVar>>;
+
+    /**
      * Proves a statement using the private input, public input and the keypair of the circuit.
      */
     prove(
