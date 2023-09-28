@@ -17,7 +17,7 @@ val snarky :
           (   (unit -> unit)
            -> < digest : Js.js_string Js.t Js.readonly_prop
               ; json : 'b Js.readonly_prop
-              ; rows : int Js.readonly_prop
+              ; rows : int Js.readonly_prop >
               Js.t )
           Js.meth
       ; inProverBlock : (unit -> bool Js.t) Js.readonly_prop
@@ -105,12 +105,12 @@ val snarky :
               (Impl.Keypair.t -> Impl.Verification_key.t) Js.meth >
           Js.t
           Js.readonly_prop
-      ; generateWitness : (Field.t array -> unit)
-            -> int
-            -> Impl.field array
-            -> Impl.Keypair.t
-            -> Impl.field Js.js_array Js.t Js.js_array Js.t 
-            Js.meth
+      ; generateWitness :
+             (Field.t array -> unit)
+          -> int
+          -> Impl.field array
+          -> Impl.Keypair.t
+          -> Impl.field Js.js_array Js.t Js.js_array Js.t Js.meth
       ; prove :
           (   (Field.t array -> unit)
            -> int
