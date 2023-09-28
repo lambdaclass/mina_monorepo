@@ -52,8 +52,6 @@ module Run = struct
       val json =
         Backend.R1CS_constraint_system.to_json cs
         |> Js.string |> Util.json_parse
-      
-      method add x y = x + y
     end
 end
 
@@ -157,7 +155,7 @@ module Circuit = struct
     let return_typ = Impl.Typ.unit in
     let cs = Impl.constraint_system ~input_typ ~return_typ (Main.of_js main) in
     Impl.Keypair.generate ~prev_challenges:0 cs
-  
+
   let generate_witness main public_input_size public_input keypair =
     let pk = Impl.Keypair.pk keypair in
     let input_typ = typ public_input_size in
@@ -320,8 +318,10 @@ let snarky =
       object%js
         method compile = Circuit.compile
 
-        method generateWitness main public_input_size public_input keypair = 
-          let ocaml_witness = Circuit.generate_witness main public_input_size public_input keypair in
+        method generateWitness main public_input_size public_input keypair =
+          let ocaml_witness =
+            Circuit.generate_witness main public_input_size public_input keypair
+          in
           let num_cols = Array.length ocaml_witness in
           let witness = new%js Js.array_length num_cols in
 
@@ -331,12 +331,14 @@ let snarky =
             let row = new%js Js.array_length num_rows in
 
             for j = 0 to num_rows - 1 do
-              let witness_field = Kimchi_bindings.FieldVectors.Fp.get ocaml_row j in
-              Js.array_set row j witness_field;
-            done;
-            Js.array_set witness i row;
-          done;
-          
+              let witness_field =
+                Kimchi_bindings.FieldVectors.Fp.get ocaml_row j
+              in
+              Js.array_set row j witness_field
+            done ;
+            Js.array_set witness i row
+          done ;
+
           witness
 
         method prove = Circuit.prove

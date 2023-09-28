@@ -191,7 +191,6 @@ declare const Snarky: {
       rows: number;
       digest: string;
       json: JsonConstraintSystem;
-      add: (x: number, y: number) => number;
     };
   };
 
@@ -268,10 +267,10 @@ declare const Snarky: {
     toConstantAndTerms(
       x: FieldVar
     ): [
-      _: 0,
-      constant: MlOption<FieldConst>,
-      terms: MlList<MlTuple<FieldConst, number>>
-    ];
+        _: 0,
+        constant: MlOption<FieldConst>,
+        terms: MlList<MlTuple<FieldConst, number>>
+      ];
   };
 
   bool: {

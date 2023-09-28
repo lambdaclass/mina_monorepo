@@ -18,7 +18,6 @@ val snarky :
            -> < digest : Js.js_string Js.t Js.readonly_prop
               ; json : 'b Js.readonly_prop
               ; rows : int Js.readonly_prop
-              ; add : int -> int -> int Js.meth >
               Js.t )
           Js.meth
       ; inProverBlock : (unit -> bool Js.t) Js.readonly_prop
